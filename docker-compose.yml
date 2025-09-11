@@ -1,0 +1,77 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # RabbitMQ core port
+      - "15672:15672" # RabbitMQ management UI
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  publisher0:
+    build: .
+    env_file:
+      - .env
+    container_name: publisher0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python publisher.py
+
+  publisher1:
+    build: .
+    env_file:
+      - .env
+    container_name: publisher1
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python publisher.py
+      
+  suscriber0:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriber0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python suscriber.py "modulo0.*" "*.error"
+  
+  suscriber1:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriber1
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python suscriber.py "modulo1.*"
+  
+  suscriber2:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriber2
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python suscriber.py "*.warning"
+
+  suscriber3:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriber3
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python suscriber.py "modulo1.*" "*.info"
+
+volumes:
+  rabbitmq_data:
