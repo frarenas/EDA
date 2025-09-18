@@ -6,20 +6,28 @@
     "rabbitmq_definition_format": "cluster",
     "original_cluster_name": "rabbit@256d4d72b188",
     "explanation": "Definitions of cluster 'rabbit@256d4d72b188'",
-    "users": [],
-    "vhosts": [
-        {
-            "name": "/",
-            "description": "Default virtual host",
-            "metadata": {
-                "description": "Default virtual host",
-                "tags": [],
-                "default_queue_type": "classic"
-            },
-            "tags": []
-        }
-    ],
-    "permissions": [],
+    "users": [
+    {
+      "name": "guest",
+      "password_hash": "o2MJjT8UKSRM7eoLDMWvm4LxqaFvDxd2wLg1KQQQ2jXfG5UE",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
     "topic_permissions": [],
     "parameters": [],
     "global_parameters": [
@@ -57,10 +65,16 @@
     "queues": [
       {"name":"login-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
       {"name":"login-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
-      {"name":"movilidad-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
-      {"name":"movilidad-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
-      {"name":"reclamos-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
-      {"name":"reclamos-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+      {"name":"movility-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
+      {"name":"movility-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+      {"name":"complaints-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
+      {"name":"complaints-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+      {"name":"waste-management-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
+      {"name":"waste-management-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+      {"name":"culture-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
+      {"name":"culture-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+      {"name":"analitycs-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000}},
+      {"name":"analitycs-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
       {"name":"validation-failures-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
       {"name":"rejected-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{}}
     ],
@@ -71,8 +85,11 @@
     ],
     "bindings": [
         {"source":"city-pass.exchange","vhost":"/","destination":"login-queue","destination_type":"queue","routing_key":"login","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"movilidad-queue","destination_type":"queue","routing_key":"movilidad","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"reclamos-queue","destination_type":"queue","routing_key":"reclamos","arguments":{}},
+        {"source":"city-pass.exchange","vhost":"/","destination":"movility-queue","destination_type":"queue","routing_key":"movility","arguments":{}},
+        {"source":"city-pass.exchange","vhost":"/","destination":"complaints-queue","destination_type":"queue","routing_key":"complaints","arguments":{}},
+        {"source":"city-pass.exchange","vhost":"/","destination":"waste-management-queue","destination_type":"queue","routing_key":"waste","arguments":{}},
+        {"source":"city-pass.exchange","vhost":"/","destination":"culture-queue","destination_type":"queue","routing_key":"culture","arguments":{}},
+        {"source":"city-pass.exchange","vhost":"/","destination":"analitycs-queue","destination_type":"queue","routing_key":"analitycs","arguments":{}},
         {"source":"failed-msg.exchange","vhost":"/","destination":"login-queue.failed-msg","destination_type":"queue","routing_key":"#","arguments":{}},
         {"source":"failed-msg.validation.exchange","vhost":"/","destination":"validation-failures-queue","destination_type":"queue","routing_key":"#","arguments":{}},
         {"source":"failed-msg.exchange","vhost":"/","destination":"rejected-queue","destination_type":"queue","routing_key":"rejected","arguments":{}},

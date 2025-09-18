@@ -5,18 +5,40 @@ services:
     ports:
       - "5672:5672" # RabbitMQ core port
       - "15672:15672" # RabbitMQ management UI
-    environment:
-        - RABBITMQ_DEFAULT_USER=admin
-        - RABBITMQ_DEFAULT_PASS=admin00
+    #environment:
+    #    - RABBITMQ_DEFAULT_USER=admin
+    #    - RABBITMQ_DEFAULT_PASS=admin00
     volumes: 
       #- ./rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config
-      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - rabbitmq_data:/var/lib/rabbitmq
+      #- ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - rabbitmq_data:/var/lib/rabbitmq:rw
+      - ./rabbitmq/definitions.json:/opt/definitions.json:ro
+      - ./rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # publisher0:
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   container_name: publisher0
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   command: python basicpublisher.py
+  
+  # suscriber0:
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   container_name: suscriber0
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   command: python basicsuscriber.py
 
 volumes:
   rabbitmq_data:

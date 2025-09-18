@@ -13,13 +13,13 @@ if not rabbitmq_host or not rabbitmq_port:
     sys.exit(1)
 
 # Lists for random message and routing key selection
-ROUTING_KEYS = ["login.info", "login.warning", "login.error", "modulo1.info", "modulo1.warning", "modulo1.error"]
+ROUTING_KEYS = ["login.info", "login.warning", "login.error", "movility.info", "movility.warning", "movility.error"]
 MESSAGES = [
-    "User logged in successfully.",
-    "A minor error was detected in the system.",
-    "The database connection failed.",
-    "A new session was started.",
-    "The disk space is running low."
+    "11111111111",
+    "22222222222",
+    "33333333333.",
+    "444444444444",
+    "555555555555"
 ]
 
 try:
@@ -34,13 +34,13 @@ try:
 
     channel = connection.channel()
 
-    channel.exchange_declare(exchange='topic_logs', exchange_type='topic')
+    #channel.exchange_declare(exchange='topic_logs', exchange_type='topic')
 
     while True:
         routing_key = random.choice(ROUTING_KEYS)
         message = random.choice(MESSAGES)
         channel.basic_publish(
-            exchange='topic_logs', routing_key=routing_key, body=message.encode())
+            exchange='city-pass.exchange', routing_key=routing_key, body=message.encode())
         print(f" [x] Sent {routing_key}: {message}")
         
         # Wait for 1 second
