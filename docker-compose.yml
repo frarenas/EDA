@@ -29,6 +29,16 @@ services:
       rabbitmq:
         condition: service_healthy
     command: python basicpublisher.py
+
+  publisherlogin:
+    build: .
+    env_file:
+      - .env
+    container_name: publisherlogin
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python publisher/publisher-login.py
   
   # suscriber0:
   #   build: .

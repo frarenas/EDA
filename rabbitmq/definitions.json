@@ -56,28 +56,7 @@
             "value": "rabbitmq-cluster-id-CY_uyvzhtI8XQguLvARLTg"
         }
     ],
-    "policies": [
-        {
-            "vhost":"/",
-            "name":"all-queues-dlx",
-            "pattern":".*",
-            "apply-to":"queues",
-            "definition":{
-                "dead-letter-exchange":"failed-msg.exchange"
-            },
-            "priority":0
-        },
-        {
-            "vhost":"/",
-            "name":"validation-queues-dlx",
-            "pattern":"^validation\\..*",
-            "apply-to":"queues",
-            "definition":{
-                "dead-letter-exchange":"failed-msg.validation.exchange"
-            },
-            "priority":1
-        }
-    ],
+    "policies": [],
     "queues": [
       {"name":"login-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000,"x-dead-letter-exchange":"failed-msg.exchange","x-dead-letter-routing-key":"login-queue.failed-msg"}},
       {"name":"login-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
@@ -91,28 +70,28 @@
       {"name":"culture-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
       {"name":"analitycs-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{"x-message-ttl": 30000,"x-dead-letter-exchange":"failed-msg.exchange","x-dead-letter-routing-key":"analitycs-queue.failed-msg"}},
       {"name":"analitycs-queue.failed-msg","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
-      {"name":"validation-failures-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
-      {"name":"rejected-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{}}
+      {"name":"unroutable-messages-queue","vhost":"/","durable":true,"auto_delete":false,"arguments":{}}
     ],
     "exchanges": [
-        {"name":"city-pass.exchange","vhost":"/","type":"topic","durable":true,"auto_delete":false,"internal":false,"arguments":{}},
-        {"name":"failed-msg.exchange","vhost":"/","type":"direct","durable":true,"auto_delete":false,"internal":false,"arguments":{}},
-        {"name":"failed-msg.validation.exchange","vhost":"/","type":"direct","durable":true,"auto_delete":false,"internal":false,"arguments":{}}
+      {"name":"city-pass.exchange","vhost":"/","type":"topic","durable":true,"auto_delete":false,"internal":false,"arguments":{}},
+      {"name":"failed-msg.exchange","vhost":"/","type":"direct","durable":true,"auto_delete":false,"internal":false,"arguments":{}},
+      {"name":"login-headers.exchange","vhost":"/","type":"headers","durable":true,"auto_delete":false,"internal":false,"arguments":{"alternate-exchange": "unroutable-messages.exchange"}},
+      {"name":"unroutable-messages.exchange","vhost":"/","type":"fanout","durable":true,"auto_delete":false,"internal":false,"arguments":{}}
     ],
     "bindings": [
-        {"source":"city-pass.exchange","vhost":"/","destination":"login-queue","destination_type":"queue","routing_key":"login.#","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"movility-queue","destination_type":"queue","routing_key":"movility.#","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"complaints-queue","destination_type":"queue","routing_key":"complaints.#","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"waste-management-queue","destination_type":"queue","routing_key":"waste.#","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"culture-queue","destination_type":"queue","routing_key":"culture.#","arguments":{}},
-        {"source":"city-pass.exchange","vhost":"/","destination":"analitycs-queue","destination_type":"queue","routing_key":"analitycs.#","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"login-queue.failed-msg","destination_type":"queue","routing_key":"login-queue.failed-msg","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"movility-queue.failed-msg","destination_type":"queue","routing_key":"movility-queue.failed-msg","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"complaints-queue.failed-msg","destination_type":"queue","routing_key":"complaints-queue.failed-msg","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"waste-management-queue.failed-msg","destination_type":"queue","routing_key":"waste-management-queue.failed-msg","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"culture-queue.failed-msg","destination_type":"queue","routing_key":"culture-queue.failed-msg","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"analitycs-queue.failed-msg","destination_type":"queue","routing_key":"analitycs-queue.failed-msg","arguments":{}},
-        {"source":"failed-msg.validation.exchange","vhost":"/","destination":"validation-failures-queue","destination_type":"queue","routing_key":"#","arguments":{}},
-        {"source":"failed-msg.exchange","vhost":"/","destination":"rejected-queue","destination_type":"queue","routing_key":"rejected","arguments":{}}
+      {"source":"city-pass.exchange","vhost":"/","destination":"login-headers.exchange","destination_type":"exchange","routing_key":"login.#","arguments":{}},
+      {"source":"city-pass.exchange","vhost":"/","destination":"movility-queue","destination_type":"queue","routing_key":"movility.#","arguments":{}},
+      {"source":"city-pass.exchange","vhost":"/","destination":"complaints-queue","destination_type":"queue","routing_key":"complaints.#","arguments":{}},
+      {"source":"city-pass.exchange","vhost":"/","destination":"waste-management-queue","destination_type":"queue","routing_key":"waste.#","arguments":{}},
+      {"source":"city-pass.exchange","vhost":"/","destination":"culture-queue","destination_type":"queue","routing_key":"culture.#","arguments":{}},
+      {"source":"city-pass.exchange","vhost":"/","destination":"analitycs-queue","destination_type":"queue","routing_key":"analitycs.#","arguments":{}},
+      {"source":"login-headers.exchange","vhost":"/","destination":"login-queue","destination_type":"queue","routing_key":"","arguments":{"x-match":"any","app-id":"login", "service": "user-authentication", "timestamp":""}},
+      {"source":"failed-msg.exchange","vhost":"/","destination":"login-queue.failed-msg","destination_type":"queue","routing_key":"login-queue.failed-msg","arguments":{}},
+      {"source":"failed-msg.exchange","vhost":"/","destination":"movility-queue.failed-msg","destination_type":"queue","routing_key":"movility-queue.failed-msg","arguments":{}},
+      {"source":"failed-msg.exchange","vhost":"/","destination":"complaints-queue.failed-msg","destination_type":"queue","routing_key":"complaints-queue.failed-msg","arguments":{}},
+      {"source":"failed-msg.exchange","vhost":"/","destination":"waste-management-queue.failed-msg","destination_type":"queue","routing_key":"waste-management-queue.failed-msg","arguments":{}},
+      {"source":"failed-msg.exchange","vhost":"/","destination":"culture-queue.failed-msg","destination_type":"queue","routing_key":"culture-queue.failed-msg","arguments":{}},
+      {"source":"failed-msg.exchange","vhost":"/","destination":"analitycs-queue.failed-msg","destination_type":"queue","routing_key":"analitycs-queue.failed_msg","arguments":{}},
+      {"source":"unroutable-messages.exchange","vhost":"/","destination":"unroutable-messages-queue","destination_type":"queue","routing_key":"#","arguments":{}}
     ]
 }
