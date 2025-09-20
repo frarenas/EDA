@@ -20,15 +20,15 @@ services:
       timeout: 5s
       retries: 5
 
-  # publisher0:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: publisher0
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python basicpublisher.py
+  publisher0:
+    build: .
+    env_file:
+      - .env
+    container_name: publisher0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python basicpublisher.py
   
   # suscriber0:
   #   build: .
