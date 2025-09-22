@@ -39,6 +39,23 @@ services:
       rabbitmq:
         condition: service_healthy
     command: python publisher/publisher-login.py
+
+  webapp:
+    build: .
+    env_file:
+      - .env
+    container_name: webapp
+    ports:
+      - "5001:5000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python app.py
+    volumes:
+      - ./webapp/app.py:/app/app.py
+      - ./webapp/templates:/app/templates
+    deploy:
+      replicas: 1
   
   # suscriber0:
   #   build: .

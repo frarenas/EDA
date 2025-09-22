@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RabbitMQ Message Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex flex-col items-center min-h-screen">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">RabbitMQ Message Viewer</h1>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-700">Listening to messages...</h2>
+        </div>
+        <div id="messages-container" class="mt-4 text-left">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Messages:</h2>
+            <ul id="message-list" class="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto border border-gray-200">
+                <!-- Messages will be appended here -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const messageList = document.getElementById('message-list');
+        const source = new EventSource('/stream');
+
+        source.onmessage = (event) => {
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            const li = document.createElement('li');
+            li.className = 'bg-white p-2 mb-2 rounded-lg shadow-sm border border-gray-100 break-words';
+            li.innerHTML = `<strong>[${time}]</strong> ${event.data}`;
+            messageList.appendChild(li);
+            messageList.scrollTop = messageList.scrollHeight;
+        };
+
+        source.onerror = (event) => {
+            console.error('EventSource failed:', event);
+            const li = document.createElement('li');
+            li.className = 'bg-red-100 text-red-700 p-2 mb-2 rounded-lg';
+            li.innerHTML = '<strong>Connection error. Check console.</strong>';
+            messageList.appendChild(li);
+        };
+    </script>
+</body>
+</html>
