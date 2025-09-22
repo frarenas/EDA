@@ -10,10 +10,11 @@ import time
 app = Flask(__name__, template_folder='templates')
 
 # Queue for messages received from RabbitMQ
-message_queue = []
+message_queues = {}
+lock = threading.Lock()
 
 # RabbitMQ Connection and Consumer
-def rabbitmq_consumer():
+def rabbitmq_consumer(queue_name):
     try:
         rabbitmq_host = os.getenv('RABBITMQ_HOST')
         rabbitmq_port = os.getenv('RABBITMQ_PORT')
@@ -34,33 +35,40 @@ def rabbitmq_consumer():
 
         def callback(ch, method, properties, body):
             print(f" [x] Received {body.decode()}")
-            message_queue.append(body.decode())
+            with lock:
+                if queue_name not in message_queues:
+                    message_queues[queue_name] = []
+                message_queues[queue_name].append(body.decode())
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
-        # Use passive=True to not redeclare the queue. This assumes the queue already exists.
-        channel.queue_declare(queue='login-queue', passive=True)
-        channel.basic_consume(queue='login-queue', on_message_callback=callback)
+        channel.queue_declare(queue=queue_name, passive=True)
+        channel.basic_consume(queue=queue_name, on_message_callback=callback)
 
-        print(' [*] Waiting for messages. To exit press CTRL+C')
+        print(f' [*] Waiting for messages on queue: {queue_name}')
         channel.start_consuming()
 
     except Exception as e:
         print(f"An error occurred in RabbitMQ consumer: {e}", file=sys.stderr)
         sys.exit(1)
 
-# Start the RabbitMQ consumer in a separate thread
-consumer_thread = threading.Thread(target=rabbitmq_consumer)
-consumer_thread.daemon = True
-consumer_thread.start()
-
 # Server-Sent Events Endpoint
-@app.route('/stream')
-def stream():
+@app.route('/stream/<queue_name>')
+def stream(queue_name):
+    # Start the RabbitMQ consumer in a separate thread if it's not already running
+    if queue_name not in message_queues:
+        with lock:
+            if queue_name not in message_queues:
+                message_queues[queue_name] = []
+                consumer_thread = threading.Thread(target=rabbitmq_consumer, args=(queue_name,))
+                consumer_thread.daemon = True
+                consumer_thread.start()
+    
     def event_stream():
         while True:
-            if message_queue:
-                message = message_queue.pop(0)
-                yield f"data: {message}\n\n"
+            with lock:
+                if message_queues[queue_name]:
+                    message = message_queues[queue_name].pop(0)
+                    yield f"data: {message}\n\n"
             time.sleep(0.1)
 
     return Response(event_stream(), mimetype="text/event-stream")

@@ -1,52 +1,102 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RabbitMQ Message Viewer</title>
+    <title>Visor de Mensajes de RabbitMQ</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
         }
     </style>
 </head>
 <body class="bg-gray-100 p-8 flex flex-col items-center min-h-screen">
-    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl text-center">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">RabbitMQ Message Viewer</h1>
-        <div class="mb-6">
-            <h2 class="text-xl font-semibold text-gray-700">Listening to messages...</h2>
+    <div class="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
+        <h1 class="text-3xl font-bold mb-4 text-center text-gray-800">Visor de Mensajes de RabbitMQ</h1>
+        <p class="text-gray-600 mb-6 text-center">Selecciona una cola para ver los mensajes en tiempo real.</p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+            <label for="queue-select" class="font-medium text-gray-700">Cola:</label>
+            <select id="queue-select" class="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="login-queue">login-queue</option>
+                <option value="movility-queue">movility-queue</option>
+                <option value="complaints-queue">complaints-queue</option>
+                <option value="unroutable-messages-queue">unroutable-messages-queue</option>
+            </select>
+            <button id="connect-button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Suscribirse
+            </button>
         </div>
-        <div id="messages-container" class="mt-4 text-left">
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Messages:</h2>
-            <ul id="message-list" class="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto border border-gray-200">
-                <!-- Messages will be appended here -->
+
+        <div id="status" class="text-center text-sm font-medium mb-4">
+            <span class="text-gray-500">Estado: Desconectado</span>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 h-96 overflow-y-scroll">
+            <ul id="message-list" class="space-y-2">
+                <!-- Messages will be added here -->
             </ul>
         </div>
     </div>
 
     <script>
-        const messageList = document.getElementById('message-list');
-        const source = new EventSource('/stream');
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const connectButton = document.getElementById('connect-button');
+            const queueSelect = document.getElementById('queue-select');
+            const statusDiv = document.getElementById('status');
+            const messageList = document.getElementById('message-list');
+            let eventSource = null;
 
-        source.onmessage = (event) => {
-            const now = new Date();
-            const time = now.toLocaleTimeString();
-            const li = document.createElement('li');
-            li.className = 'bg-white p-2 mb-2 rounded-lg shadow-sm border border-gray-100 break-words';
-            li.innerHTML = `<strong>[${time}]</strong> ${event.data}`;
-            messageList.appendChild(li);
-            messageList.scrollTop = messageList.scrollHeight;
-        };
+            function updateStatus(message, color = 'gray') {
+                statusDiv.innerHTML = `<span class="text-${color}-500">Estado: ${message}</span>`;
+            }
 
-        source.onerror = (event) => {
-            console.error('EventSource failed:', event);
-            const li = document.createElement('li');
-            li.className = 'bg-red-100 text-red-700 p-2 mb-2 rounded-lg';
-            li.innerHTML = '<strong>Connection error. Check console.</strong>';
-            messageList.appendChild(li);
-        };
+            function disconnect() {
+                if (eventSource) {
+                    eventSource.close();
+                    eventSource = null;
+                    updateStatus('Desconectado');
+                    console.log('Desconectado del stream');
+                }
+            }
+
+            connectButton.addEventListener('click', () => {
+                disconnect();
+                
+                const queueName = queueSelect.value;
+                const url = `/stream/${queueName}`;
+                updateStatus(`Conectando a ${queueName}...`);
+                
+                eventSource = new EventSource(url);
+                console.log(`Intentando conectar a ${url}`);
+
+                eventSource.onopen = () => {
+                    updateStatus(`Conectado a la cola '${queueName}'`, 'green');
+                    console.log('Conexión SSE abierta.');
+                };
+
+                eventSource.onmessage = (event) => {
+                    const message = event.data;
+                    const listItem = document.createElement('li');
+                    listItem.className = 'p-3 bg-white rounded-lg shadow border border-gray-200 text-gray-800 break-words transition duration-200 ease-in-out transform hover:scale-105';
+                    listItem.innerHTML = `<span class="font-bold">[${new Date().toLocaleTimeString()}]</span> ${message}`;
+                    messageList.prepend(listItem);
+                };
+
+                eventSource.onerror = (error) => {
+                    console.error('Error de EventSource:', error);
+                    updateStatus('Error de conexión. Intentando reconectar...');
+                    // Reconexión automática gestionada por el navegador
+                };
+            });
+
+            // Disconnect when the user navigates away
+            window.addEventListener('beforeunload', () => {
+                disconnect();
+            });
+        });
     </script>
 </body>
 </html>
