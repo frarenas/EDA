@@ -5,12 +5,7 @@ services:
     ports:
       - "5672:5672" # RabbitMQ core port
       - "15672:15672" # RabbitMQ management UI
-    #environment:
-    #    - RABBITMQ_DEFAULT_USER=admin
-    #    - RABBITMQ_DEFAULT_PASS=admin00
-    volumes: 
-      #- ./rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config
-      #- ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    volumes:
       - rabbitmq_data:/var/lib/rabbitmq:rw
       - ./rabbitmq/definitions.json:/opt/definitions.json:ro
       - ./rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
@@ -20,112 +15,55 @@ services:
       timeout: 5s
       retries: 5
 
-  publisher0:
+  publishercomplaints:
     build: .
     env_file:
       - .env
-    container_name: publisher0
+    container_name: publisherComplaints
     depends_on:
       rabbitmq:
         condition: service_healthy
-    command: python basicpublisher.py
-
-  publisherlogin:
-    build: .
-    env_file:
-      - .env
-    container_name: publisherlogin
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    command: python publisher/publisher-login.py
-
-  webapp:
-    build: .
-    env_file:
-      - .env
-    container_name: webapp
-    ports:
-      - "5001:5000"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    command: python app.py
-    volumes:
-      - ./webapp/app.py:/app/app.py
-      - ./webapp/templates:/app/templates
-    deploy:
-      replicas: 1
+    command: python -u publisher/publisher-complaints.py
   
-  # suscriber0:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: suscriber0
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python basicsuscriber.py
+  publisherculture:
+    build: .
+    env_file:
+      - .env
+    container_name: publisherCulture
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python -u publisher/publisher-culture.py
+
+  suscribermobility:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriberMobility
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python -u suscriber/queue-suscriber.py "mobility-queue"
+
+  suscriberwaste:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriberWaste
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python -u suscriber/queue-suscriber.py "waste-management-queue"
+
+  suscriberanalitycs:
+    build: .
+    env_file:
+      - .env
+    container_name: suscriberAnalitycs
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: python -u suscriber/queue-suscriber.py "analitycs-queue"
 
 volumes:
   rabbitmq_data:
-
-  # publisher0:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: publisher0
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python publisher.py
-
-  # publisher1:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: publisher1
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python publisher.py
-      
-  # suscriber0:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: suscriber0
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python suscriber.py "modulo0.*" "*.error"
-  
-  # suscriber1:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: suscriber1
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python suscriber.py "modulo1.*"
-  
-  # suscriber2:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: suscriber2
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python suscriber.py "*.warning"
-
-  # suscriber3:
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   container_name: suscriber3
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   command: python suscriber.py "modulo1.*" "*.info"
